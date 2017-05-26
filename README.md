@@ -12,7 +12,7 @@ where the columns in [inputfile] are:
  
 The output file has two columns:
  1) P(sat)
- 2) if(Psat)>0, the index of the larger galaxy that is most likely the host halo
+ 2) Indx. if(Psat)>0, this is the index of the larger galaxy that is most likely the host halo. Otherwise, -1.
  
 The output can be cut two ways:
  1) P(sat)<0.01. A "pure" sample of central galaxies.
