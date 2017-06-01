@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   //output results
   for(i=1;i<=ngal;++i)
     {
-      printf("%e %d\n",psat[i],ihost[i]);
+      printf("%e %d %e %f %e\n",psat[i],ihost[i],mgal[i], theta[i]*180/PI, mhalo[i]);
     }
 
 }
@@ -241,19 +241,29 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
       //if already in group, skip
       //if(psat[j]>0.5)continue;
 
-      dx = fabs((ra[i]-ra[j]));
-      if(dx>1.0*theta_max)continue;
-      dy = fabs((dec[i]-dec[j])/cos(dec[i]));
-      if(dy>1.0*theta_max)continue;
+      /*
+      dx = fabs((ra[i]-ra[j])*cos(dec[i]));
+      if(dx>3.0*theta_max)continue;
+      dy = fabs((dec[i]-dec[j]));
+      if(dy>3.0*theta_max)continue;
+      */
       if(!PHOTOZ)
 	{
 	  dz = fabs(redshift[i] - redshift[j])*SPEED_OF_LIGHT;
 	  if(dz>6*sigma[i])continue;
 	}
       theta = angular_separation(ra[i],dec[i],ra[j],dec[j]);
+      if(j==5 && i==-1) { fprintf(stdout,"%f %f %f\n",theta,theta_max,theta/theta_max); }
       if(theta>theta_max)continue;
       
       prob_ang = angular_probability(mhalo[i],theta,rhalo[i],theta_max);
+      if(j==5 && i==-1) {
+	fprintf(stdout,"ACK here %d %e %e %e %e %e %e %e\n",j, dz/sigma[i],
+		theta/theta_max,prob_ang, prob_rad, prob_ang*prob_rad, sigma[i], p0);
+	fflush(stdout);
+	exit(0);
+      }
+
       if(!PHOTOZ)
 	prob_rad = exp(-dz*dz/(2*sigma[i]*sigma[i]))/(RT2PI*sigma[i])*SPEED_OF_LIGHT;
       else 
@@ -262,7 +272,7 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
       //prob_rad = SPEED_OF_LIGHT;
       
       p0 = (1 - 1/(1+prob_ang*prob_rad/10));   
-      if(p0>psat[i]) { psat[j]=p0; ihost[j] = i; }
+      if(p0>psat[j]) { psat[j]=p0; ihost[j] = i; }
       //fprintf(stdout,"ACK here %d %e %e %e %e %e %e %eq\n",j, dz/sigma[i],
       //	      theta/theta_max,prob_ang, prob_rad, prob_ang*prob_rad, sigma[i], p0);
 
