@@ -21,3 +21,6 @@ The output can be cut two ways:
 The pure sample is pure relative to a full group-finding algorithm (compared to the group catalog's sample of pure centrals), to ~98% at all stellar masses. The completenss of the pure sample (relative to the group catalog's pure sample) is about 70%. The completenss of the pure sample relative to everthing the group catalog calls a central (P[sat]<0.5) is ~60%.
 
 The complete sample is pure relative to the full catalog central sample at about 95%. The complete sample is complete relative to the full catalog of all centrals at about 75%. 
+
+The following plot shows the performance of the code under various conditions.
+<img src="plots/isolation_performance.png" width="500"/>
