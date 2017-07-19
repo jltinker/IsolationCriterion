@@ -35,6 +35,7 @@ float angular_probability(float mass, float dr, float rad, float ang_rad);
 /* Global variables
  */
 int PHOTOZ=0; // don't use the redshift information, only projected separation
+float PHOTOZ_ERROR = 0;
 
 int main(int argc, char **argv)
 {
@@ -45,11 +46,18 @@ int main(int argc, char **argv)
 
   if(argc<2)
     {
-      fprintf(stderr,"isolation_condition filename > output\n");
+      fprintf(stderr,"isolation_condition filename [PHOTOZ_ERROR] > output\n");
       exit(0);
     }
   fp = openfile(argv[1]);
   ngal = filesize(fp);
+  PHOTOZ = 0;
+  if(argc>2) 
+    {
+      PHOTOZ = 1;
+      PHOTOZ_ERROR = atof(argv[2]);
+      fprintf(stderr,"PHOTOZ_ERROR= (1+z)*%f\n",PHOTOZ_ERROR);
+    }
 
   // declare storage for the galaxies
   ra = vector(1,ngal);
@@ -74,6 +82,8 @@ int main(int argc, char **argv)
       dec[i] *= PI/180.;
       psat[i] = 0;
       ihost[i] = -1;
+      // check if mgal in right units
+      if(mgal[i]>100)mgal[i] = log10(mgal[i]);
     }
   fclose(fp);
   fprintf(stderr,"Done reading %d lines from [%s]\n",ngal,argv[1]);
@@ -84,6 +94,11 @@ int main(int argc, char **argv)
   // get the angular radii for all galaxies' halos
   for(i=1;i<=ngal;++i)
     theta[i] = stellar2halo(mgal[i], z[i], &mhalo[i], &rhalo[i], &sigma[i]);
+
+  for(i=1;i<=-ngal;++i)
+    {
+      printf("BOO %f %f\n", mgal[i], log10(mhalo[i]));
+    }
 
   // loop through each galaxy in the sample, find possible satellites.
   for(i=1;i<=ngal;++i)
@@ -227,7 +242,7 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
 		      float *ang_rad, float *mgal, float *psat, int *ihost, float *mhalo, float *rhalo, float *sigma)
 {
   int j, j1;
-  float dx, dy, dz, theta, prob_ang, vol_corr, prob_rad, grp_lum, p0, theta_max, x1;
+  float dx, dy, dz, theta, prob_ang, vol_corr, prob_rad, grp_lum, p0, theta_max, x1, photoz_error;
 
   theta_max = ang_rad[i];
   for(j=1;j<=ngal;++j)
@@ -252,6 +267,12 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
 	  dz = fabs(redshift[i] - redshift[j])*SPEED_OF_LIGHT;
 	  if(dz>6*sigma[i])continue;
 	}
+      else
+	{
+	  dz = fabs(redshift[i] - redshift[j])*SPEED_OF_LIGHT;
+	  photoz_error = (1+redshift[i])*PHOTOZ_ERROR*1.41*SPEED_OF_LIGHT;
+	  if(dz>3*photoz_error)continue;
+	}
       theta = angular_separation(ra[i],dec[i],ra[j],dec[j]);
       if(j==5 && i==-1) { fprintf(stdout,"%f %f %f\n",theta,theta_max,theta/theta_max); }
       if(theta>theta_max)continue;
@@ -267,11 +288,10 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
       if(!PHOTOZ)
 	prob_rad = exp(-dz*dz/(2*sigma[i]*sigma[i]))/(RT2PI*sigma[i])*SPEED_OF_LIGHT;
       else 
-	prob_rad = 1;
-      //prob_ang = 1;
-      //prob_rad = SPEED_OF_LIGHT;
+	prob_rad = exp(-dz*dz/(2*photoz_error*photoz_error))/(RT2PI*photoz_error)*SPEED_OF_LIGHT;
       
       p0 = (1 - 1/(1+prob_ang*prob_rad/10));   
+      //p0 = (1 - 1/(1+prob_ang*prob_rad/120));   
       if(p0>psat[j]) { psat[j]=p0; ihost[j] = i; }
       //fprintf(stdout,"ACK here %d %e %e %e %e %e %e %eq\n",j, dz/sigma[i],
       //	      theta/theta_max,prob_ang, prob_rad, prob_ang*prob_rad, sigma[i], p0);
