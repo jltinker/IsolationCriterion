@@ -102,12 +102,16 @@ int main(int argc, char **argv)
 
   // loop through each galaxy in the sample, find possible satellites.
   for(i=1;i<=ngal;++i)
-    nsat[i] = find_satellites(i,ngal,ra,dec,z,theta,mgal,psat,ihost,mhalo,rhalo,sigma);
+    {
+      if(i%1000==0)fprintf(stderr,"%.3f\n",i*1./ngal);
+      nsat[i] = find_satellites(i,ngal,ra,dec,z,theta,mgal,psat,ihost,mhalo,rhalo,sigma);
+    }
 
   //output results
   for(i=1;i<=ngal;++i)
     {
-      printf("%e %d %e %f %e\n",psat[i],ihost[i],mgal[i], theta[i]*180/PI, mhalo[i]);
+      //printf("%e %d %f %e %e\n",psat[i],ihost[i],mgal[i], mhalo[ihost[i]], mhalo[i]);
+      printf("%e %d\n",psat[i],ihost[i]);
     }
 
 }
@@ -244,7 +248,7 @@ float find_satellites(int i, int ngal, float *ra, float *dec, float *redshift,
   int j, j1;
   float dx, dy, dz, theta, prob_ang, vol_corr, prob_rad, grp_lum, p0, theta_max, x1, photoz_error;
 
-  theta_max = ang_rad[i];
+  theta_max = ang_rad[i]*2;
   for(j=1;j<=ngal;++j)
     {
       //if self, skip
