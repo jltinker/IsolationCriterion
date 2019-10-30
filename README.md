@@ -29,3 +29,6 @@ object, as well as non-Gaussian PDFs.
 
 The following plot shows the performance of the code under various conditions.
 <img src="plots/isolation_performance.png" width="500"/>
+
+If you use this code, please cite the paper, Tinker et al (arXiv
+number forthcoming).
